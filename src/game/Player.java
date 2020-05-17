@@ -22,6 +22,10 @@ public class Player {
         this.size = size;
     }
 
+    public double getSize() {
+        return size;
+    }
+
 
     public Ellipse show() {
         Ellipse ellipse = new Ellipse(x, y, size, size);
@@ -45,7 +49,9 @@ public class Player {
     }
 
     public void flap() {
-        velY -= 7;
+        if (velY > -3) {
+            velY -= 7;
+        }
     }
 
 }
