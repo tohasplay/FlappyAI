@@ -1,5 +1,6 @@
 package sample;
 
+import ai.Network;
 import game.Habitat;
 import game.Player;
 import game.Tube;
@@ -9,6 +10,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.shape.Ellipse;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -26,6 +28,8 @@ public class Controller {
     AnimationTimer gameProcess;
     private long lastUpdate;
     private int score = 0;
+
+    Network network = new Network();
 
     static boolean GAME_OVER = false;
 
@@ -46,18 +50,29 @@ public class Controller {
             }
         });
 
+        stage.setOnCloseRequest(event -> System.exit(0));
+
         tube = new Tube(pane);
 
         gameProcess = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 if (GAME_OVER){
-                    stop();
+                    restart();
                 }
                 game();
                 if (now - lastUpdate >= 3000) {
-                    repaint();
                     lastUpdate = now ;
+                    if (!tube.getObjects().isEmpty()) {
+                        double[] data = nearest();
+                        network.getX(player.getVelY() * 10, data[0], data[1], data[2]);
+                        double d = network.returnValue();
+                        System.out.println(d);
+                        if (d > 0.5){
+                            player.flap();
+                        }
+                    }
+                    repaint();
                 }
             }
 
@@ -66,6 +81,29 @@ public class Controller {
         gameProcess.start();
 
     }
+
+    synchronized private double[] nearest(){
+
+        Rectangle[] rectangles = new Rectangle[2];
+        double nX = tube.getObjects().get(0).getX();
+        rectangles[0] = tube.getObjects().get(0);
+        rectangles[1] = tube.getObjects().get(1);
+        if (nX < 0){
+            nX = tube.getObjects().get(1).getX();
+        }
+        double nid = 1;
+        for (int i = 2; i < tube.getObjects().size(); i += 2) {
+            if (tube.getObjects().get(i).getX() - player.show().getCenterX() < nX &&
+                    tube.getObjects().get(i).getX() - player.show().getCenterX() > 0){
+                nX = tube.getObjects().get(i).getX() - player.show().getCenterX();
+                rectangles[0] = tube.getObjects().get(i);
+                rectangles[1] = tube.getObjects().get(i + 1);
+            }
+        }
+
+        return new double[]{nX, rectangles[0].getHeight() - player.show().getCenterY(), rectangles[1].getY() - player.show().getCenterY()};
+    }
+
     private void game() {
         if (player.show().getCenterY() >= pane.getHeight()) {
             GAME_OVER = true;

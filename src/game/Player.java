@@ -10,6 +10,8 @@ public class Player {
     double velY;
     double size = 5;
 
+
+
     public Player(double x, double y, double speed) {
         this.x = x;
         this.y = y;
@@ -20,6 +22,10 @@ public class Player {
     public Player(double x, double y, Habitat habitat, double size) {
         this(x, y, habitat.speed);
         this.size = size;
+    }
+
+    public double getVelY() {
+        return velY;
     }
 
     public double getSize() {
